@@ -53,24 +53,17 @@ def get_jobs_by_lang_with_salary_hh(prof_name, area_name, period_job, lang):
     return items
 
 
-def predict_rub_salary_hh(vacancy):
+def predict_rub_salary_for_hh(vacancy_hh):
     """
     Возвращает либо зп, либо None.
     Если есть от и до, то выводит среднее.
     Если есть только от, то умножаем на 1,2
     Если есть только до, то умножаем на 0,8
     """
-    salary = vacancy['salary']
+    salary = vacancy_hh['salary']
     if salary:
         if salary['currency'] == 'RUR':
-            if salary['to']:
-                if salary['from']:
-                    return (salary['to'] + salary['from']) * 0.5
-                else:
-                    return salary['to'] * 0.8
-            else:
-                if salary['from']:
-                    return salary['from'] * 1.2
+            return predict_rub_salary(salary['to'], salary['from'])
     return None
 
 
@@ -81,33 +74,43 @@ def predict_rub_salary_url_hh(id_job):
     response = requests.get(url)
     response.raise_for_status()
 
-    return predict_rub_salary_hh(response.json())
+    return predict_rub_salary_for_hh(response.json())
 
+
+def get_average_salary_by_one_lang_hh(prof_name, area_name, period_job, lang, jobs_lang):
+        logging.info(lang)
+        info_by_lang = {}
+        info_by_lang["vacancies_found"] = jobs_lang
+        items = get_jobs_by_lang_with_salary_hh(prof_name, area_name, period_job, lang)
+        vacancies_processed, sum_salary = 0, 0
+        len_items = len(items)
+        for item in items:
+            salary_item = predict_rub_salary_for_hh(item)
+            if salary_item:
+                vacancies_processed += 1
+                sum_salary += salary_item
+                logging.info(f' {vacancies_processed} из {len_items}. {int(100*vacancies_processed/len_items)}')
+
+        info_by_lang['vacancies_processed'] = vacancies_processed
+        if vacancies_processed:
+            info_by_lang['average_salary'] = int(sum_salary/vacancies_processed)
+        else:
+            info_by_lang['average_salary'] = 0
+        logging.info(info_by_lang)
+        return info_by_lang
 
 def get_average_salary_by_langs_hh(prof_name, area_name, period_job, langs):
     """Функция расчёта средних зарплат по списку языков из hh"""
     jobs_langs = get_jobs_by_langs_hh(prof_name, area_name, period_job, langs)
     info_by_langs = {}
     for lang in langs:
-        logging.info(lang)
-        info_by_langs[lang] = {}
-        info_by_langs[lang]["vacancies_found"] = jobs_langs[lang]
-        items = get_jobs_by_lang_with_salary_hh(prof_name, area_name, period_job, lang)
-        vacancies_processed, sum_salary = 0, 0
-        len_items = len(items)
-        for item in items:
-            salary_item = predict_rub_salary_hh(item)
-            if salary_item:
-                vacancies_processed += 1
-                sum_salary += salary_item
-                logging.info(f' {vacancies_processed} из {len_items}. {int(100*vacancies_processed/len_items)}')
-
-        info_by_langs[lang]['vacancies_processed'] = vacancies_processed
-        if vacancies_processed:
-            info_by_langs[lang]['average_salary'] = int(sum_salary/vacancies_processed)
-        else:
-            info_by_langs[lang]['average_salary'] = 0
-        logging.info(info_by_langs[lang])
+        info_by_langs[lang] = get_average_salary_by_one_lang_hh(
+            prof_name,
+            area_name,
+            period_job,
+            lang,
+            jobs_langs[lang]
+        )
     return info_by_langs
 
 
@@ -128,22 +131,26 @@ def get_id_category_by_title_sj(title_category, headers):
         find_title(item, keys, title_category)
     return keys
 
-
-def predict_rub_salary_for_sj(vacancy):
+def predict_rub_salary(pay_to, pay_from):
     """
     Возвращает либо зп, либо None.
     Если есть от и до, то выводит среднее.
     Если есть только от, то умножаем на 1,2
     Если есть только до, то умножаем на 0,8
     """
-    if vacancy['currency'] == 'rub':
-        if int(vacancy['payment_to']) > 0:
-            if int(vacancy['payment_from']) > 0:
-                return (int(vacancy['payment_to']) + int(vacancy['payment_from']))*0.5
-            else:
-                return int(vacancy['payment_to']) * 0.8
-        elif int(vacancy['payment_from']) > 0:
-            return int(vacancy['payment_from']) * 1.2
+    if pay_to and (int(pay_to) > 0):
+        if pay_from and (int(pay_from) > 0):
+            return (int(pay_to) + int(pay_from)) * 0.5
+        else:
+            return int(pay_to) * 0.8
+    elif pay_from and (int(pay_from) > 0):
+        return int(pay_from) * 1.2
+    return None
+
+def predict_rub_salary_for_sj(vacancy_sj):
+    """Возвращает либо зп, либо None. Если валюта - рубль"""
+    if vacancy_sj['currency'] == 'rub':
+        return predict_rub_salary(vacancy_sj['payment_to'], vacancy_sj['payment_from'])
     return None
 
 
