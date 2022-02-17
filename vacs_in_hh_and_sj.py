@@ -202,7 +202,7 @@ def get_jobs_by_lang_with_salary_sj(params, headers, lang, period_job):
     return lang_settings
 
 
-def get_jobs_by_lang_with_salary_in_table(languages, langs_settings, name_table):
+def print_jobs_by_lang_with_salary_in_table(languages, langs_settings, name_table):
     """Печать в консоль сводной таблицы по зарплатам по языкам"""
     table_headers = ['Язык программирования', 'Вакансий найдено', 'Вакансий обработано', 'Средняя зарплата']
 
@@ -274,13 +274,13 @@ if __name__ == '__main__':
         languages
     )
 
-    get_jobs_by_lang_with_salary_in_table(
+    print_jobs_by_lang_with_salary_in_table(
         languages,
         langs_hh_salary,
         'HeadHunter Moscow'
     )
 
-    get_jobs_by_lang_with_salary_in_table(
+    print_jobs_by_lang_with_salary_in_table(
         languages,
         get_average_salary_by_lang_sj(
             category_sj,
