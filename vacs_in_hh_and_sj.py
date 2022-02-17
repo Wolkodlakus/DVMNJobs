@@ -91,17 +91,13 @@ def get_average_salary_by_langs_hh(url_job, prof_name, area_name, period_job, la
         info_by_langs[lang]["vacancies_found"] = jobs_langs[lang]
         items = get_jobs_by_lang_with_salary_hh(url_job, prof_name, area_name, period_job, lang)
         vacancies_processed, sum_salary = 0, 0
-        # sum_salary_item = [] # Закомментирован второй вариант
         len_items = len(items)
         for item in items:
             salary_item = predict_rub_salary_hh(item)
-            # sum_salary_item.append(salary_item)
             if salary_item:
                 vacancies_processed += 1
                 sum_salary += salary_item
                 logging.info(f' {vacancies_processed} из {len_items}. {int(100*vacancies_processed/len_items)}')
-        # vacancies_processed_ = sum(1 for _ in filter(None.__ne__, sum_salary_item))
-        # sum_salary_ = sum([x for x in sum_salary_item if x])
 
         info_by_langs[lang]['vacancies_processed'] = vacancies_processed
         if vacancies_processed:
