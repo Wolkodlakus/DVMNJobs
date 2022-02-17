@@ -53,17 +53,15 @@ def get_jobs_by_lang_with_salary_hh(prof_name, area_name, period_job, lang):
     return items
 
 
-def predict_rub_salary_for_hh(vacancy_hh):
+def predict_rub_salary_for_hh(currency, salary_from, salary_to):
     """
     Возвращает либо зп, либо None.
     Если есть от и до, то выводит среднее.
     Если есть только от, то умножаем на 1,2
     Если есть только до, то умножаем на 0,8
     """
-    salary = vacancy_hh['salary']
-    if salary:
-        if salary['currency'] == 'RUR':
-            return predict_rub_salary(salary['to'], salary['from'])
+    if currency == 'RUR':
+        return predict_rub_salary(salary_from, salary_to)
     return None
 
 
@@ -73,31 +71,33 @@ def predict_rub_salary_url_hh(id_job):
     url = f'{url_job}/{id_job}'
     response = requests.get(url)
     response.raise_for_status()
-
-    return predict_rub_salary_for_hh(response.json())
+    salary = response.json()['salary']
+    return predict_rub_salary_for_hh(salary['currency'], salary['from'], salary['to'])
 
 
 def get_average_salary_by_one_lang_hh(prof_name, area_name, period_job, lang, jobs_lang):
-        logging.info(lang)
-        info_by_lang = {}
-        info_by_lang["vacancies_found"] = jobs_lang
-        items = get_jobs_by_lang_with_salary_hh(prof_name, area_name, period_job, lang)
-        vacancies_processed, sum_salary = 0, 0
-        len_items = len(items)
-        for item in items:
-            salary_item = predict_rub_salary_for_hh(item)
+    logging.info(lang)
+    info_by_lang = {}
+    info_by_lang['vacancies_found'] = jobs_lang
+    items = get_jobs_by_lang_with_salary_hh(prof_name, area_name, period_job, lang)
+    vacancies_processed, sum_salary = 0, 0
+    len_items = len(items)
+    for item in items:
+        salary = item['salary']
+        if salary:
+            salary_item = predict_rub_salary_for_hh(salary['currency'], salary['from'], salary['to'])
             if salary_item:
                 vacancies_processed += 1
                 sum_salary += salary_item
                 logging.info(f' {vacancies_processed} из {len_items}. {int(100*vacancies_processed/len_items)}')
+    info_by_lang['vacancies_processed'] = vacancies_processed
+    if vacancies_processed:
+        info_by_lang['average_salary'] = int(sum_salary/vacancies_processed)
+    else:
+        info_by_lang['average_salary'] = 0
+    logging.info(info_by_lang)
+    return info_by_lang
 
-        info_by_lang['vacancies_processed'] = vacancies_processed
-        if vacancies_processed:
-            info_by_lang['average_salary'] = int(sum_salary/vacancies_processed)
-        else:
-            info_by_lang['average_salary'] = 0
-        logging.info(info_by_lang)
-        return info_by_lang
 
 def get_average_salary_by_langs_hh(prof_name, area_name, period_job, langs):
     """Функция расчёта средних зарплат по списку языков из hh"""
@@ -131,7 +131,8 @@ def get_id_category_by_title_sj(title_category, headers):
         find_title(item, keys, title_category)
     return keys
 
-def predict_rub_salary(pay_to, pay_from):
+
+def predict_rub_salary(pay_from, pay_to):
     """
     Возвращает либо зп, либо None.
     Если есть от и до, то выводит среднее.
@@ -147,10 +148,11 @@ def predict_rub_salary(pay_to, pay_from):
         return int(pay_from) * 1.2
     return None
 
-def predict_rub_salary_for_sj(vacancy_sj):
+
+def predict_rub_salary_for_sj(currency, salary_from, salary_to):
     """Возвращает либо зп, либо None. Если валюта - рубль"""
-    if vacancy_sj['currency'] == 'rub':
-        return predict_rub_salary(vacancy_sj['payment_to'], vacancy_sj['payment_from'])
+    if currency == 'rub':
+        return predict_rub_salary(salary_from, salary_to)
     return None
 
 
@@ -193,7 +195,7 @@ def get_jobs_by_lang_with_salary_sj(params, headers, lang, period_job):
     vacancies_processed = 0
     sum_salary = 0
     for item in items_lang:
-        salary = predict_rub_salary_for_sj(item)
+        salary = predict_rub_salary_for_sj(item['currency'], item['payment_from'], item['payment_to'])
         if salary:
             vacancies_processed += 1
             sum_salary += salary
@@ -298,4 +300,3 @@ if __name__ == '__main__':
         ),
         'SuperJob Moscow'
     )
-
