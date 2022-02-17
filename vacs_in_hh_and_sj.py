@@ -16,24 +16,6 @@ def get_area_id_hh(name_area):
     return response.json()['items'][0]['id']
 
 
-def get_dif_all_and_period_hh(url_vac, prof_name, area_name, period_vac):
-    """Вычисление количества вакансий в регионе всего и за определённый период"""
-    params = {
-        'text': prof_name,
-        'area': get_area_id_hh(area_name),
-        'per_page': 100,
-    }
-    response = requests.get(url_vac, params=params)
-    response.raise_for_status()
-    numb_all = response.json()['found']
-    params['period'] = period_vac
-    response = requests.get(url_vac, params=params)
-    response.raise_for_status()
-    numb_period = response.json()['found']
-    logging.info(f'Всего вакансий в регионе {area_name} - {numb_all}, а за период {period_vac} - {numb_period}')
-    logging.info(f'Разница {numb_all - numb_period}')
-
-
 def get_vacs_by_langs_hh(url_vac, prof_name, area_name, period_vac, languages):
     """Нахождение вакансий в hh по всем языкам"""
     lang_vacs = {}
