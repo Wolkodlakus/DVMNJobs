@@ -16,8 +16,9 @@ def get_area_id_hh(name_area):
     return response.json()['items'][0]['id']
 
 
-def get_jobs_by_langs_hh(url_job, prof_name, area_name, period_job, languages):
+def get_jobs_by_langs_hh(prof_name, area_name, period_job, languages):
     """Нахождение вакансий в hh по всем языкам"""
+    url_job = 'https://api.hh.ru/vacancies'
     lang_jobs = {}
     for lang in languages:
         params = {
@@ -32,8 +33,9 @@ def get_jobs_by_langs_hh(url_job, prof_name, area_name, period_job, languages):
     return lang_jobs
 
 
-def get_jobs_by_lang_with_salary_hh(url_job, prof_name, area_name, period_job, lang):
+def get_jobs_by_lang_with_salary_hh(prof_name, area_name, period_job, lang):
     """Функция получает все вакансии по определённому языку с пагинацией"""
+    url_job = 'https://api.hh.ru/vacancies'
     per_page = 100
     items = []
     for page in range(2000//per_page):
@@ -72,8 +74,9 @@ def predict_rub_salary_hh(vacancy):
     return None
 
 
-def predict_rub_salary_url_hh(url_job, id_job):
+def predict_rub_salary_url_hh(id_job):
     """возвращение ЗП по определённой вакансии"""
+    url_job = 'https://api.hh.ru/vacancies'
     url = f'{url_job}/{id_job}'
     response = requests.get(url)
     response.raise_for_status()
@@ -81,15 +84,15 @@ def predict_rub_salary_url_hh(url_job, id_job):
     return predict_rub_salary_hh(response.json())
 
 
-def get_average_salary_by_langs_hh(url_job, prof_name, area_name, period_job, langs):
+def get_average_salary_by_langs_hh(prof_name, area_name, period_job, langs):
     """Функция расчёта средних зарплат по списку языков из hh"""
-    jobs_langs = get_jobs_by_langs_hh(url_job, prof_name, area_name, period_job, langs)
+    jobs_langs = get_jobs_by_langs_hh(prof_name, area_name, period_job, langs)
     info_by_langs = {}
     for lang in langs:
         logging.info(lang)
         info_by_langs[lang] = {}
         info_by_langs[lang]["vacancies_found"] = jobs_langs[lang]
-        items = get_jobs_by_lang_with_salary_hh(url_job, prof_name, area_name, period_job, lang)
+        items = get_jobs_by_lang_with_salary_hh(prof_name, area_name, period_job, lang)
         vacancies_processed, sum_salary = 0, 0
         len_items = len(items)
         for item in items:
@@ -144,8 +147,9 @@ def predict_rub_salary_for_sj(vacancy):
     return None
 
 
-def get_jobs_from_pages_sj(url_api, params, headers, period_job):
+def get_jobs_from_pages_sj(params, headers, period_job):
     """Получение всех записей с заданными параметрами из sj"""
+    url_api = 'https://api.superjob.ru/2.0/vacancies/'
     params['count'] = 100
     page = 0
     params['page'] = page
@@ -175,10 +179,10 @@ def get_jobs_from_pages_sj(url_api, params, headers, period_job):
     return items_all
 
 
-def get_jobs_by_lang_with_salary_sj(url_api, params, headers, lang, period_job):
+def get_jobs_by_lang_with_salary_sj(params, headers, lang, period_job):
     """Получение зарплаты по языку в sj(поиск по всему тексту вакансии)"""
     params['keyword'] = lang
-    items_lang = get_jobs_from_pages_sj(url_api, params, headers, period_job)
+    items_lang = get_jobs_from_pages_sj(params, headers, period_job)
     vacancies_processed = 0
     sum_salary = 0
     for item in items_lang:
@@ -215,7 +219,7 @@ def get_jobs_by_lang_with_salary_in_table(languages, langs_settings, name_table)
     print(table_instance.table)
 
 
-def get_average_salary_by_lang_sj(url_api, category_sj, area_name, period_job, langs, headers):
+def get_average_salary_by_lang_sj(category_sj, area_name, period_job, langs, headers):
     """Функция расчёта средних зарплат по списку языков из sj"""
     id_category = get_id_category_by_title_sj(category_sj, headers)
     logging.info(f'{id_category} - список key категории {category_sj}')
@@ -227,7 +231,6 @@ def get_average_salary_by_lang_sj(url_api, category_sj, area_name, period_job, l
     langs_settings = {}
     for lang in langs:
         langs_settings[lang] = get_jobs_by_lang_with_salary_sj(
-            url_api,
             params,
             headers,
             lang,
@@ -246,7 +249,6 @@ if __name__ == '__main__':
         format="%(asctime)s %(levelname)s %(message)s"
     )
 
-    url_job_hh = 'https://api.hh.ru/vacancies'
     prof_name = 'программист'
     languages = [
         'JavaScript',
@@ -260,14 +262,12 @@ if __name__ == '__main__':
         'C',
         'Ruby'
     ]
-    url_api_sj = 'https://api.superjob.ru/2.0/vacancies/'
     headers_sj = {
         'X-Api-App-Id': sj_secret_key
     }
     category_sj = 'Разработка, программирование'
 
     langs_hh_salary = get_average_salary_by_langs_hh(
-        url_job_hh,
         prof_name,
         area_name,
         period_job,
@@ -283,7 +283,6 @@ if __name__ == '__main__':
     get_jobs_by_lang_with_salary_in_table(
         languages,
         get_average_salary_by_lang_sj(
-            url_api_sj,
             category_sj,
             area_name,
             period_job,
