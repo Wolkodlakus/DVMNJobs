@@ -53,17 +53,6 @@ def get_jobs_by_lang_with_salary_hh(prof_name, area_name, period_job, lang):
     return items
 
 
-def predict_rub_salary_for_hh(currency, salary_from, salary_to):
-    """
-    Возвращает либо зп, либо None.
-    Если есть от и до, то выводит среднее.
-    Если есть только от, то умножаем на 1,2
-    Если есть только до, то умножаем на 0,8
-    """
-    if currency == 'RUR':
-        return predict_rub_salary(salary_from, salary_to)
-
-
 def predict_rub_salary_url_hh(id_job):
     """возвращение ЗП по определённой вакансии"""
     url_job = 'https://api.hh.ru/vacancies'
@@ -71,7 +60,8 @@ def predict_rub_salary_url_hh(id_job):
     response = requests.get(url)
     response.raise_for_status()
     salary = response.json()['salary']
-    return predict_rub_salary_for_hh(salary['currency'], salary['from'], salary['to'])
+    if salary['currency'] == 'RUR':
+        return predict_rub_salary(salary['from'], salary['to'])
 
 
 def get_average_salary_by_one_lang_hh(prof_name, area_name, period_job, lang, jobs_lang):
@@ -84,11 +74,12 @@ def get_average_salary_by_one_lang_hh(prof_name, area_name, period_job, lang, jo
     for item in items:
         salary = item['salary']
         if salary:
-            salary_item = predict_rub_salary_for_hh(salary['currency'], salary['from'], salary['to'])
-            if salary_item:
-                vacancies_processed += 1
-                sum_salary += salary_item
-                logging.info(f' {vacancies_processed} из {len_items}. {int(100*vacancies_processed/len_items)}')
+            if salary['currency'] == 'RUR':
+                salary_item = predict_rub_salary(salary['from'], salary['to'])
+                if salary_item:
+                    vacancies_processed += 1
+                    sum_salary += salary_item
+                    logging.info(f' {vacancies_processed} из {len_items}. {int(100*vacancies_processed/len_items)}')
     info_by_lang['vacancies_processed'] = vacancies_processed
     if vacancies_processed:
         info_by_lang['average_salary'] = int(sum_salary/vacancies_processed)
@@ -147,12 +138,6 @@ def predict_rub_salary(pay_from, pay_to):
         return int(pay_from) * 1.2
 
 
-def predict_rub_salary_for_sj(currency, salary_from, salary_to):
-    """Возвращает либо зп, либо None. Если валюта - рубль"""
-    if currency == 'rub':
-        return predict_rub_salary(salary_from, salary_to)
-
-
 def get_jobs_from_pages_sj(params, headers, period_job):
     """Получение всех записей с заданными параметрами из sj"""
     url_api = 'https://api.superjob.ru/2.0/vacancies/'
@@ -192,10 +177,11 @@ def get_jobs_by_lang_with_salary_sj(params, headers, lang, period_job):
     vacancies_processed = 0
     sum_salary = 0
     for item in items_lang:
-        salary = predict_rub_salary_for_sj(item['currency'], item['payment_from'], item['payment_to'])
-        if salary:
-            vacancies_processed += 1
-            sum_salary += salary
+        if item['currency'] == 'rub':
+            salary = predict_rub_salary(item['payment_from'], item['payment_to'])
+            if salary:
+                vacancies_processed += 1
+                sum_salary += salary
     if vacancies_processed > 0:
         average_salary = int(sum_salary/vacancies_processed)
     else:
