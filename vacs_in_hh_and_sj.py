@@ -16,14 +16,14 @@ def get_area_id_hh(name_area):
     return response.json()['items'][0]['id']
 
 
-def get_jobs_by_langs_hh(prof_name, area_name, period_job, languages):
+def get_jobs_by_langs_hh(prof_name, area_id, period_job, languages):
     """Нахождение вакансий в hh по всем языкам"""
     url_job = 'https://api.hh.ru/vacancies'
     lang_jobs = {}
     for lang in languages:
         params = {
             'text': f'{prof_name} {lang}',
-            'area': get_area_id_hh(area_name),
+            'area': area_id,
             'period': period_job,
             'per_page': 100,
         }
@@ -33,7 +33,7 @@ def get_jobs_by_langs_hh(prof_name, area_name, period_job, languages):
     return lang_jobs
 
 
-def get_jobs_by_lang_with_salary_hh(prof_name, area_name, period_job, lang):
+def get_jobs_by_lang_with_salary_hh(prof_name, area_id, period_job, lang):
     """Функция получает все вакансии по определённому языку с пагинацией"""
     url_job = 'https://api.hh.ru/vacancies'
     per_page = 100
@@ -42,7 +42,7 @@ def get_jobs_by_lang_with_salary_hh(prof_name, area_name, period_job, lang):
         logging.info(f'Язык {lang}, страница {page}')
         params = {
             'text': f'{prof_name} {lang}',
-            'area': get_area_id_hh(area_name),
+            'area': area_id,
             'period': period_job,
             'per_page': per_page,
             'only_with_salary': True,
@@ -64,11 +64,11 @@ def predict_rub_salary_url_hh(id_job):
         return predict_rub_salary(salary['from'], salary['to'])
 
 
-def get_average_salary_by_one_lang_hh(prof_name, area_name, period_job, lang, jobs_lang):
+def get_average_salary_by_one_lang_hh(prof_name, area_id, period_job, lang, jobs_lang):
     logging.info(lang)
     info_by_lang = {}
     info_by_lang['vacancies_found'] = jobs_lang
-    items = get_jobs_by_lang_with_salary_hh(prof_name, area_name, period_job, lang)
+    items = get_jobs_by_lang_with_salary_hh(prof_name, area_id, period_job, lang)
     vacancies_processed, sum_salary = 0, 0
     len_items = len(items)
     for item in items:
@@ -89,14 +89,14 @@ def get_average_salary_by_one_lang_hh(prof_name, area_name, period_job, lang, jo
     return info_by_lang
 
 
-def get_average_salary_by_langs_hh(prof_name, area_name, period_job, langs):
+def get_average_salary_by_langs_hh(prof_name, area_id, period_job, langs):
     """Функция расчёта средних зарплат по списку языков из hh"""
-    jobs_langs = get_jobs_by_langs_hh(prof_name, area_name, period_job, langs)
+    jobs_langs = get_jobs_by_langs_hh(prof_name, area_id, period_job, langs)
     info_by_langs = {}
     for lang in langs:
         info_by_langs[lang] = get_average_salary_by_one_lang_hh(
             prof_name,
-            area_name,
+            area_id,
             period_job,
             lang,
             jobs_langs[lang]
@@ -235,6 +235,7 @@ if __name__ == '__main__':
     load_dotenv()
     sj_secret_key = os.getenv('SJ_SECRET_KEY')
     area_name = 'Москва'
+    area_id_hh = get_area_id_hh(area_name)
     period_job = 30
     logging.basicConfig(level=logging.INFO)
     logging.basicConfig(
@@ -261,7 +262,7 @@ if __name__ == '__main__':
 
     langs_hh_salary = get_average_salary_by_langs_hh(
         prof_name,
-        area_name,
+        area_id_hh,
         period_job,
         languages
     )
