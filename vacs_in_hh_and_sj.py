@@ -5,7 +5,7 @@ import os
 from terminaltables import AsciiTable
 
 
-def get_area_id_hh(name_area):
+def get_hh_area_id(name_area):
     """Функция получает id региона в hh по его названию, он может поменяться"""
     url_area = 'https://api.hh.ru/suggests/areas'
     params = {
@@ -16,7 +16,7 @@ def get_area_id_hh(name_area):
     return response.json()['items'][0]['id']
 
 
-def get_jobs_by_langs_hh(prof_name, area_id, period_job, languages):
+def get_hh_langs_jobs(prof_name, area_id, period_job, languages):
     """Нахождение вакансий в hh по всем языкам"""
     url_job = 'https://api.hh.ru/vacancies'
     lang_jobs = {}
@@ -33,7 +33,7 @@ def get_jobs_by_langs_hh(prof_name, area_id, period_job, languages):
     return lang_jobs
 
 
-def get_jobs_by_lang_with_salary_hh(prof_name, area_id, period_job, lang):
+def get_hh_all_lang_jobs(prof_name, area_id, period_job, lang):
     """Функция получает все вакансии по определённому языку с пагинацией"""
     url_job = 'https://api.hh.ru/vacancies'
     per_page = 100
@@ -53,7 +53,7 @@ def get_jobs_by_lang_with_salary_hh(prof_name, area_id, period_job, lang):
     return items
 
 
-def predict_rub_salary_url_hh(id_job):
+def predict_hh_rub_url_salary(id_job):
     """возвращение ЗП по определённой вакансии"""
     url_job = 'https://api.hh.ru/vacancies'
     url = f'{url_job}/{id_job}'
@@ -64,11 +64,11 @@ def predict_rub_salary_url_hh(id_job):
         return predict_rub_salary(salary['from'], salary['to'])
 
 
-def get_average_salary_by_one_lang_hh(prof_name, area_id, period_job, lang, jobs_lang):
+def get_average_hh_lang_salary(prof_name, area_id, period_job, lang, jobs_lang):
     logging.info(lang)
     info_by_lang = {}
     info_by_lang['vacancies_found'] = jobs_lang
-    items = get_jobs_by_lang_with_salary_hh(prof_name, area_id, period_job, lang)
+    items = get_hh_all_lang_jobs(prof_name, area_id, period_job, lang)
     vacancies_processed, sum_salary = 0, 0
     len_items = len(items)
     for item in items:
@@ -89,12 +89,12 @@ def get_average_salary_by_one_lang_hh(prof_name, area_id, period_job, lang, jobs
     return info_by_lang
 
 
-def get_average_salary_by_langs_hh(prof_name, area_id, period_job, langs):
+def get_average_hh_langs_salary(prof_name, area_id, period_job, langs):
     """Функция расчёта средних зарплат по списку языков из hh"""
-    jobs_langs = get_jobs_by_langs_hh(prof_name, area_id, period_job, langs)
+    jobs_langs = get_hh_langs_jobs(prof_name, area_id, period_job, langs)
     info_by_langs = {}
     for lang in langs:
-        info_by_langs[lang] = get_average_salary_by_one_lang_hh(
+        info_by_langs[lang] = get_average_hh_lang_salary(
             prof_name,
             area_id,
             period_job,
@@ -104,7 +104,7 @@ def get_average_salary_by_langs_hh(prof_name, area_id, period_job, langs):
     return info_by_langs
 
 
-def get_id_category_by_title_sj(title_category, headers):
+def get_sj_category_id(title_category, headers):
     """Поиск кода искомой категории в списке категорий"""
     def find_title(item, keys, title_category):
         if item.get('positions'):
@@ -138,7 +138,7 @@ def predict_rub_salary(pay_from, pay_to):
         return int(pay_from) * 1.2
 
 
-def get_jobs_from_pages_sj(params, headers, period_job):
+def get_sj_all_jobs(params, headers, period_job):
     """Получение всех записей с заданными параметрами из sj"""
     url_api = 'https://api.superjob.ru/2.0/vacancies/'
     params['count'] = 100
@@ -170,10 +170,10 @@ def get_jobs_from_pages_sj(params, headers, period_job):
     return items_all
 
 
-def get_jobs_by_lang_with_salary_sj(params, headers, lang, period_job):
+def get_sj_all_lang_jobs(params, headers, lang, period_job):
     """Получение зарплаты по языку в sj(поиск по всему тексту вакансии)"""
     params['keyword'] = lang
-    items_lang = get_jobs_from_pages_sj(params, headers, period_job)
+    items_lang = get_sj_all_jobs(params, headers, period_job)
     vacancies_processed = 0
     sum_salary = 0
     for item in items_lang:
@@ -194,7 +194,7 @@ def get_jobs_by_lang_with_salary_sj(params, headers, lang, period_job):
     return lang_settings
 
 
-def print_jobs_by_lang_with_salary_in_table(languages, langs_settings, name_table):
+def print_salary_table(languages, langs_settings, name_table):
     """Печать в консоль сводной таблицы по зарплатам по языкам"""
     table_headers = ['Язык программирования', 'Вакансий найдено', 'Вакансий обработано', 'Средняя зарплата']
 
@@ -211,9 +211,9 @@ def print_jobs_by_lang_with_salary_in_table(languages, langs_settings, name_tabl
     print(table_instance.table)
 
 
-def get_average_salary_by_lang_sj(category_sj, area_name, period_job, langs, headers):
+def get_average_sj_lang_salary(category_sj, area_name, period_job, langs, headers):
     """Функция расчёта средних зарплат по списку языков из sj"""
-    id_category = get_id_category_by_title_sj(category_sj, headers)
+    id_category = get_sj_category_id(category_sj, headers)
     logging.info(f'{id_category} - список key категории {category_sj}')
     params = {
         'town': area_name,
@@ -222,7 +222,7 @@ def get_average_salary_by_lang_sj(category_sj, area_name, period_job, langs, hea
 
     langs_settings = {}
     for lang in langs:
-        langs_settings[lang] = get_jobs_by_lang_with_salary_sj(
+        langs_settings[lang] = get_sj_all_lang_jobs(
             params,
             headers,
             lang,
@@ -235,7 +235,7 @@ if __name__ == '__main__':
     load_dotenv()
     sj_secret_key = os.getenv('SJ_SECRET_KEY')
     area_name = 'Москва'
-    area_id_hh = get_area_id_hh(area_name)
+    area_id_hh = get_hh_area_id(area_name)
     period_job = 30
     logging.basicConfig(level=logging.INFO)
     logging.basicConfig(
@@ -260,22 +260,22 @@ if __name__ == '__main__':
     }
     category_sj = 'Разработка, программирование'
 
-    langs_hh_salary = get_average_salary_by_langs_hh(
+    langs_hh_salary = get_average_hh_langs_salary(
         prof_name,
         area_id_hh,
         period_job,
         languages
     )
 
-    print_jobs_by_lang_with_salary_in_table(
+    print_salary_table(
         languages,
         langs_hh_salary,
         'HeadHunter Moscow'
     )
 
-    print_jobs_by_lang_with_salary_in_table(
+    print_salary_table(
         languages,
-        get_average_salary_by_lang_sj(
+        get_average_sj_lang_salary(
             category_sj,
             area_name,
             period_job,
