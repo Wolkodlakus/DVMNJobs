@@ -62,7 +62,6 @@ def predict_rub_salary_for_hh(currency, salary_from, salary_to):
     """
     if currency == 'RUR':
         return predict_rub_salary(salary_from, salary_to)
-    return None
 
 
 def predict_rub_salary_url_hh(id_job):
@@ -146,14 +145,12 @@ def predict_rub_salary(pay_from, pay_to):
             return int(pay_to) * 0.8
     elif pay_from and (int(pay_from) > 0):
         return int(pay_from) * 1.2
-    return None
 
 
 def predict_rub_salary_for_sj(currency, salary_from, salary_to):
     """Возвращает либо зп, либо None. Если валюта - рубль"""
     if currency == 'rub':
         return predict_rub_salary(salary_from, salary_to)
-    return None
 
 
 def get_jobs_from_pages_sj(params, headers, period_job):
