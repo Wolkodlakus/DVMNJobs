@@ -53,17 +53,6 @@ def get_hh_all_lang_jobs(prof_name, area_id, period_job, lang):
     return items
 
 
-def predict_hh_rub_url_salary(id_job):
-    """возвращение ЗП по определённой вакансии"""
-    url_job = 'https://api.hh.ru/vacancies'
-    url = f'{url_job}/{id_job}'
-    response = requests.get(url)
-    response.raise_for_status()
-    salary = response.json()['salary']
-    if salary['currency'] == 'RUR':
-        return predict_rub_salary(salary['from'], salary['to'])
-
-
 def get_average_hh_lang_salary(prof_name, area_id, period_job, lang, jobs_lang):
     logging.info(lang)
     info_by_lang = {}
