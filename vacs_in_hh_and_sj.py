@@ -17,7 +17,7 @@ def get_hh_area_id(name_area):
 
 
 def get_hh_langs_jobs(prof_name, area_id, period_job, languages):
-    """Нахождение вакансий в hh по всем языкам"""
+    """Нахождение Количества вакансий в hh по всем языкам"""
     url_job = 'https://api.hh.ru/vacancies'
     lang_jobs = {}
     for lang in languages:
@@ -46,6 +46,7 @@ def get_hh_all_lang_jobs(prof_name, area_id, period_job, lang):
             'period': period_job,
             'per_page': per_page,
             'only_with_salary': True,
+            'page': page,
         }
         response = requests.get(url_job, params=params)
         response.raise_for_status()
@@ -56,8 +57,8 @@ def get_hh_all_lang_jobs(prof_name, area_id, period_job, lang):
 def get_average_hh_lang_salary(prof_name, area_id, period_job, lang, jobs_lang):
     logging.info(lang)
     info_by_lang = {}
-    info_by_lang['vacancies_found'] = jobs_lang
     items = get_hh_all_lang_jobs(prof_name, area_id, period_job, lang)
+    info_by_lang['vacancies_found'] = jobs_lang
     vacancies_processed, sum_salary = 0, 0
     len_items = len(items)
     for item in items:
@@ -121,13 +122,14 @@ def predict_rub_salary(pay_from, pay_to):
     Если есть только от, то умножаем на 1,2
     Если есть только до, то умножаем на 0,8
     """
-    if pay_to and int(pay_to):
-        if pay_from and int(pay_from):
-            return (int(pay_to) + int(pay_from)) * 0.5
+    if pay_to:
+        if pay_from:
+            return (pay_to + pay_from) * 0.5
         else:
-            return int(pay_to) * 0.8
-    elif pay_from and int(pay_from):
-        return int(pay_from) * 1.2
+            return pay_to * 0.8
+    elif pay_from :
+        return pay_from * 1.2
+
 
 
 def get_sj_all_jobs(params, headers, period_job):
