@@ -171,7 +171,7 @@ def get_sj_all_lang_jobs(params, headers, lang, period_job):
             if salary:
                 vacancies_processed += 1
                 sum_salary += salary
-    if vacancies_processed > 0:
+    if vacancies_processed:
         average_salary = int(sum_salary/vacancies_processed)
     else:
         average_salary = None
