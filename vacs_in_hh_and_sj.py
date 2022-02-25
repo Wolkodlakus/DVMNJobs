@@ -62,13 +62,16 @@ def get_average_hh_lang_salary(prof_name, area_id, period_job, lang, jobs_lang):
     len_items = len(items)
     for item in items:
         salary = item['salary']
-        if salary:
-            if salary['currency'] == 'RUR':
-                salary_item = predict_rub_salary(salary['from'], salary['to'])
-                if salary_item:
-                    vacancies_processed += 1
-                    sum_salary += salary_item
-                    logging.info(f' {vacancies_processed} из {len_items}. {int(100*vacancies_processed/len_items)}')
+        if not salary:
+            continue
+        if not salary['currency'] == 'RUR':
+            continue
+        salary_item = predict_rub_salary(salary['from'], salary['to'])
+        if not salary_item:
+            continue
+        vacancies_processed += 1
+        sum_salary += salary_item
+        logging.info(f' {vacancies_processed} из {len_items}. {int(100*vacancies_processed/len_items)}')
     info_by_lang['vacancies_processed'] = vacancies_processed
     if vacancies_processed:
         info_by_lang['average_salary'] = int(sum_salary/vacancies_processed)
@@ -166,11 +169,13 @@ def get_sj_all_lang_jobs(params, headers, lang, period_job):
     vacancies_processed = 0
     sum_salary = 0
     for item in items_lang:
-        if item['currency'] == 'rub':
-            salary = predict_rub_salary(item['payment_from'], item['payment_to'])
-            if salary:
-                vacancies_processed += 1
-                sum_salary += salary
+        if not (item['currency'] == 'rub'):
+            continue
+        salary = predict_rub_salary(item['payment_from'], item['payment_to'])
+        if not salary:
+            continue
+        vacancies_processed += 1
+        sum_salary += salary
     if vacancies_processed:
         average_salary = int(sum_salary/vacancies_processed)
     else:
