@@ -32,7 +32,7 @@ ______
 
 ### Пример запуска скрипта: 
 ```commandline
-(venv) python vacs_in_hh_and_sj.py
+(venv) python vacancies_in_hh_and_sj.py
 ```
 ### Результат работы:
 ```commandline
