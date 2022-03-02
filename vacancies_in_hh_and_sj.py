@@ -51,6 +51,7 @@ def get_all_hh_lang_vacancies(prof_name, area_id, period_job, lang):
         response = requests.get(url_job, params=params)
         response.raise_for_status()
         items.extend(response.json()['items'])
+
     return items
 
 
@@ -128,9 +129,7 @@ def predict_rub_salary(pay_from, pay_to):
     if pay_to:
         return pay_to * 0.8
     if pay_from:
-        pay_from * 1.2
-
-
+        return pay_from * 1.2
 
 
 def get_all_sj_vacancies(params, headers, period_job):
