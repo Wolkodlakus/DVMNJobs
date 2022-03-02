@@ -123,13 +123,13 @@ def predict_rub_salary(pay_from, pay_to):
     Если есть только от, то умножаем на 1,2
     Если есть только до, то умножаем на 0,8
     """
+    if pay_to and pay_from:
+        return (pay_to + pay_from) * 0.5
     if pay_to:
-        if pay_from:
-            return (pay_to + pay_from) * 0.5
-        else:
-            return pay_to * 0.8
-    elif pay_from :
-        return pay_from * 1.2
+        return pay_to * 0.8
+    if pay_from:
+        pay_from * 1.2
+
 
 
 
