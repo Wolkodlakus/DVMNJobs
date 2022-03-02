@@ -104,7 +104,7 @@ def get_sj_category_id(title_category, headers):
         if item.get('positions'):
             for item2 in item['positions']:
                 find_title(item2, keys, title_category)
-        if item['title'].find(title_category) >= 0:
+        if not (item['title'].find(title_category) == -1):
             keys.append(item['key'])
 
     url_cat = 'https://api.superjob.ru/2.0/catalogues/'
